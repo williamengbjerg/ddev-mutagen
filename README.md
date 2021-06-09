@@ -1,12 +1,13 @@
-# Mutagen NFS with DDEV
+## Mutagen file synchronization with DDEV
 
 Uses [mutagen](https://mutagen.io/) to sync files into and out of a ddev web container and completely bypasses osxfs or NFS.
 
 ## Requirements
 
-- Requires project setup with [DDEV-Local](https://ddev.readthedocs.io/en/stable/). v1.14.0 or newer.
+- Project setup with [DDEV-Local](https://ddev.readthedocs.io/en/stable/). v1.14.0 or newer.
 
 --- 
+
 ## Usage
 ````bash
 curl https://raw.githubusercontent.com/williamengbjerg/ddev-mutagen/master/setup.sh | bash
