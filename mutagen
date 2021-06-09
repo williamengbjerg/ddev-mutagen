@@ -1,0 +1,105 @@
+#!/bin/bash
+
+## Description: Runs mutagen on the current project
+## Usage: mutagen
+## Example: "ddev mutagen"
+
+function require_program {
+    if ! type "$1" > /dev/null 2>&1; then
+        echo "$1 is required. Please install it and try again."
+        exit 1
+    fi
+}
+
+require_program "mutagen"
+
+# Prevent invalid session name errors.
+SANITIZED_SITE_NAME=${DDEV_SITENAME//[^a-zA-Z0-9]/}
+
+function mutagen_sync_create() {
+  mutagen sync create . docker://ddev-${DDEV_SITENAME}-web/var/www/html --ignore-vcs --ignore=.ddev/project-stopped,.idea --sync-mode=two-way-resolved --symlink-mode=posix-raw --name="$SANITIZED_SITE_NAME"
+}
+
+# Wait for the initial sync process to complete, watch for errors
+# Return when ready.
+function initial_sync() {
+
+    echo "Waiting for initial sync to complete..."
+    while true; do
+        if mutagen sync list "$SANITIZED_SITE_NAME" | grep "Last error"; then
+            echo "Mutagen sync has errored -- check 'mutagen sync list $SANITIZED_SITE_NAME' for the problem"
+            break
+        fi
+        if mutagen sync list "$SANITIZED_SITE_NAME" | grep "Status: Watching for changes"; then
+            echo "Initial mutagen sync has completed. Happy coding!"
+            break
+        fi
+        sleep 3
+    done
+}
+
+# Make sure the mutagen daemon is running.
+# If the daemon is already running, this will fail, but that's okay.
+function mutagen_daemon_start() {
+    mutagen daemon start 2>/dev/null
+}
+
+# Create the sync process from the ddev project name.
+function mutagen_create_sync_filename() {
+    echo "$SANITIZED_SITE_NAME" > ${DDEV_APPROOT}/.ddev/.mutagen-sync-name
+}
+
+# Synchronize backup folder to host
+# Create a new mutagen session
+function rsync_project() {
+
+    # Move folders/files
+    echo "Sync backup files into root"
+    rsync -azP --del --exclude '.ddev/*' .ddev/project-stopped/ ./ --quiet
+
+    # Clear out the test files that are bundled with the web container.
+    ddev . --dir /var/www/html rm -rf index.html
+    ddev . --dir /var/www/html rm -rf test/
+
+    mutagen_daemon_start
+    mutagen_sync_create
+    initial_sync
+}
+
+
+if [ "$1" == "start" ]; then
+
+      # Resume fom last work. Retrieve backup files
+      if [[ -f "${DDEV_APPROOT}/.ddev/.mutagen-sync-name-stopped" && -f "${DDEV_APPROOT}/.ddev/.mutagen-sync-name" ]]; then
+        rsync_project
+        rm "${DDEV_APPROOT}"/.ddev/.mutagen-sync-name-stopped
+        exit 0
+      else
+          # Clear out the test files that are bundled with the web container.
+          ddev exec --dir /var/www rm -f phpstatus.php
+          mutagen_daemon_start
+          mutagen_create_sync_filename
+
+          if ! mutagen sync list "$SANITIZED_SITE_NAME" 2>/dev/null; then
+              mutagen_sync_create
+              initial_sync
+          else
+              rsync_project
+          fi
+      fi
+fi
+
+if [ "$1" == "stop" ]; then
+
+    # Copy and move sync name. Used for validation to resume project
+    cp ${DDEV_APPROOT}/.ddev/.mutagen-sync-name ${DDEV_APPROOT}/.ddev/.mutagen-sync-name-stopped
+
+    # Move host files/dir to "save-directory"
+    echo "Wait: Backing up files to resume project later..."
+    rsync -azP -aR --exclude '.ddev*' . .ddev/project-stopped --delete --quiet
+
+    echo "Terminate mutagen sync process"
+    mutagen sync terminate "$SANITIZED_SITE_NAME"
+    sleep 3
+
+fi
