@@ -1,3 +1,5 @@
+<a href="https://github.com/williamengbjerg/ddev-mutagen/graphs/commit-activity" target="_blank"><img src="https://img.shields.io/badge/Maintained-yes-green" alt="Maintained - Yes" /></a>
+
 ## Mutagen file synchronization with DDEV
 
 Uses [mutagen](https://mutagen.io/) to sync files into and out of a ddev web container and completely bypasses osxfs or NFS.
