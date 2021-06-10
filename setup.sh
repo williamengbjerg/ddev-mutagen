@@ -24,6 +24,7 @@ echo "  => Downloading mutagen hook script from:"
 echo "     https://raw.githubusercontent.com/williamengbjerg/ddev-mutagen/master/mutagen"
 [ -d ".ddev/commands/host" ] || mkdir -p .ddev/commands/host
 curl -s https://raw.githubusercontent.com/williamengbjerg/ddev-mutagen/master/mutagen > .ddev/commands/host/mutagen
+mkdir -p .ddev/project-stopped
 chmod +x .ddev/commands/host/mutagen
 
 # If hooks are already present, let's not break their config.
