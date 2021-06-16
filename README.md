@@ -1,4 +1,4 @@
-<a href="https://github.com/williamengbjerg/ddev-mutagen/graphs/commit-activity" target="_blank"><img src="https://img.shields.io/badge/Maintained-yes-green" alt="Maintained - Yes" /></a>
+![GitHub release (latest by date)](https://img.shields.io/github/v/release/williamengbjerg/ddev-mutagen) ![](https://img.shields.io/badge/maintained-yes-green)
 
 ## Mutagen file synchronization with DDEV
 
