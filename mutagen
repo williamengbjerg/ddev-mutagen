@@ -47,6 +47,7 @@ function initial_sync() {
 # If the daemon is already running, this will fail, but that's okay.
 function mutagen_daemon_start() {
     mutagen daemon start 2>/dev/null
+    echo "${GREEN}Mutagen daemon started...${END}"
 }
 
 # Create the sync process from the ddev project name.
@@ -90,6 +91,8 @@ if [ "$1" == "start" ]; then
         # Reset mutagen sync X
         mutagen sync reset "$SANITIZED_SITE_NAME"
         rm "${DDEV_APPROOT}"/.ddev/.mutagen-sync-name-stopped
+        initial_sync
+        sleep 3
         exit
       fi
 
