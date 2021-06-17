@@ -23,6 +23,11 @@ echo "=> Setting up mutagen sync script in the current ddev project"
 echo "  => Downloading mutagen hook script from:"
 echo "     https://raw.githubusercontent.com/williamengbjerg/ddev-mutagen/master/mutagen"
 [ -d ".ddev/commands/host" ] || mkdir -p .ddev/commands/host
+
+if [ -f ".ddev/commands/host/mutagen" ]; then
+    rm -rf .ddev/commands/host/mutagen
+fi
+
 curl -s https://raw.githubusercontent.com/williamengbjerg/ddev-mutagen/master/mutagen > .ddev/commands/host/mutagen
 mkdir -p .ddev/project-stopped
 chmod +x .ddev/commands/host/mutagen
