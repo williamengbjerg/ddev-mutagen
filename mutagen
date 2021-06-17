@@ -61,8 +61,8 @@ function rsync_project() {
 
     # Move folders/files if folder has backup files
     if [[ -d ".ddev/project-stopped" && -n "$(ls -A .ddev/project-stopped/)" ]]; then
-        echo "${YELLOW}Sync [project-stopped] backup-files into root...${END}"
-        rsync -azP --del --exclude '.ddev/*' .ddev/project-stopped/ ./ --quiet
+        # echo "${YELLOW}Sync [project-stopped] backup-files into root...${END}"
+        # rsync -azP --del --exclude '.ddev/*' .ddev/project-stopped/ ./ --quiet
 
         # Clear out the test files that are bundled with the web container.
         ddev . --dir /var/www/html rm -rf index.html
@@ -92,7 +92,6 @@ if [ "$1" == "start" ]; then
         mutagen sync reset "$SANITIZED_SITE_NAME"
         rm "${DDEV_APPROOT}"/.ddev/.mutagen-sync-name-stopped
         initial_sync
-        sleep 3
         exit
       fi
 
