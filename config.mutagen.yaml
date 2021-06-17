@@ -1,0 +1,7 @@
+hooks:
+  post-start:
+    - exec-host: ddev mutagen start
+    - exec-host: "rsync -azP --del --exclude '.ddev/*' .ddev/project-stopped/ ./ --quiet"
+  pre-stop:
+    - exec-host: ddev mutagen stop
+    - exec-host: "rsync -azP -aR --exclude '.ddev*' . .ddev/project-stopped --delete --quiet"
