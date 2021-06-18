@@ -1,3 +1,4 @@
+no_project_mount: true
 hooks:
   post-start:
     - exec-host: ddev mutagen start
