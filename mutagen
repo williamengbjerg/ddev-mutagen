@@ -72,6 +72,11 @@ function rsync_project() {
 
 if [ "$1" == "start" ]; then
 
+
+      if mutagen sync list "$SANITIZED_SITE_NAME" 2>/dev/null; then
+          mutagen_sync_create
+      fi
+
       mutagen_daemon_start
 
       # Clear out the test files that are bundled with the web container.
