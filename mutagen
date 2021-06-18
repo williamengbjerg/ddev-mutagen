@@ -100,6 +100,7 @@ if [ "$1" == "run" ]; then
       fi
 
       clear_test_files
+      backup_files
 
       echo "${YELLOW}Starting $SANITIZED_SITE_NAME${END}"
       mutagen_create_filename
