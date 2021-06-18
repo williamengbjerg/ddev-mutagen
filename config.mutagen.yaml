@@ -1,11 +1,14 @@
 no_project_mount: true
 hooks:
+  # backup root files before mutagen start
+  pre-start:
+    - exec-host: "rsync -azP -aR --exclude '.ddev*' . .ddev/project-stopped --delete --quiet"
   post-start:
+    # - exec-host: "rsync -azP --del --exclude '.ddev/*' .ddev/project-stopped/ ./ --quiet" # sync backup files into container
     - exec-host: ddev mutagen start
-  pre-stop:
+  
+  # backup files into .ddev before stopping
+  #pre-stop:
+  #  - exec-host: "rsync -azP -aR --exclude '.ddev*' . .ddev/project-stopped --quiet" # backup files into .ddev
+  post-stop:
     - exec-host: ddev mutagen stop
-    - exec-host: "rsync -azP -aR --exclude '.ddev*' . .ddev/project-stopped --delete --quiet"
-
-  # Backup files before starting project
-  pre-exec:
-    - exec-host: "rsync -azP -aR --exclude '.ddev*' . .ddev/project-stopped --delete --quiet"

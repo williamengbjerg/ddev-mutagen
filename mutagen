@@ -35,11 +35,6 @@ function initial_sync() {
             echo "${RED}Mutagen sync has errored -- check 'mutagen sync list $SANITIZED_SITE_NAME' for the problem${END}"
             break
         fi
-        if mutagen sync list "$SANITIZED_SITE_NAME" | grep "Last error: beta polling error:"; then
-            mutagen sync terminate "$SANITIZED_SITE_NAME"
-            mutagen_sync_create
-            break
-        fi
         if mutagen sync list "$SANITIZED_SITE_NAME" | grep "Status: Watching for changes"; then
             echo "${GREEN}Initial mutagen sync has completed!${END}"
             break
@@ -58,46 +53,25 @@ function mutagen_create_sync_filename() {
     echo "$SANITIZED_SITE_NAME" > ${DDEV_APPROOT}/.ddev/.mutagen-sync-name
 }
 
-# Create a new mutagen session
-function rsync_project() {
-
-    # Move folders/files if folder has backup files
-    if [[ -d ".ddev/project-stopped" && -n "$(ls -A .ddev/project-stopped/)" ]]; then
-        mutagen_sync_create
-        initial_sync
-    fi
-
-}
-
 
 if [ "$1" == "start" ]; then
 
-      if mutagen sync list "$SANITIZED_SITE_NAME" 2>/dev/null; then
-          # Retrieve files front project-stopped
-          rsync -azP --del --exclude '.ddev/*' .ddev/project-stopped/ ./ --quiet
-          mutagen_sync_create
+      # Don't recreate mutagen sync if it already exists.
+      if [ -f ".ddev/.mutagen-sync-name" ]; then
+          echo "${RED}Mutagen sync appears to already be running{$END}"
+          exit 0
       fi
+
+      # Clear out the test files that are bundled with the web container.
+      ddev . --dir /var/www rm phpstatus.php
+      ddev . --dir /var/www/html rm -rf test
+      ddev . --dir /var/www/html rm -rf index.html
 
       mutagen_daemon_start
 
-      # Clear out the test files that are bundled with the web container.
-      ddev . --dir /var/www/html rm -rf index.html
-      ddev . --dir /var/www/html rm -rf test/
-
-      # Resume
-      if [[ -f "${DDEV_APPROOT}/.ddev/.mutagen-sync-name-stopped" && -f "${DDEV_APPROOT}/.ddev/.mutagen-sync-name" ]]; then
-
-          #mutagen sync reset "$SANITIZED_SITE_NAME"
-          rsync_project
-          rm "${DDEV_APPROOT}"/.ddev/.mutagen-sync-name-stopped
-      fi
-
-      if [ ! -f "${DDEV_APPROOT}/.ddev/.mutagen-sync-name" ]; then
-          mutagen_create_sync_filename
-      fi
 
       if ! mutagen sync list "$SANITIZED_SITE_NAME" 2>/dev/null; then
-          mutagen_sync_create
+        mutagen_sync_create
       fi
 
       initial_sync
@@ -107,10 +81,11 @@ fi
 if [ "$1" == "stop" ]; then
 
     # Copy and move sync name. Used for validation to resume project
-    cp ${DDEV_APPROOT}/.ddev/.mutagen-sync-name ${DDEV_APPROOT}/.ddev/.mutagen-sync-name-stopped
+    #cp "${DDEV_APPROOT}/.ddev/.mutagen-sync-name" "${DDEV_APPROOT}/.ddev/.mutagen-sync-name-stopped"
+    rm -rf "${DDEV_APPROOT}/.ddev/.mutagen-sync-name"
 
     echo "${YELLOW}Terminate mutagen sync process...${END}"
-    mutagen daemon stop
     mutagen sync terminate "$SANITIZED_SITE_NAME"
+    mutagen daemon stop
 
 fi
