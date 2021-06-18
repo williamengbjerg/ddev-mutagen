@@ -55,7 +55,9 @@ function mutagen_create_filename() {
 clear_test_files() {
     # Clear out the test files that are bundled with the web container.
     ddev . rm -rf index.html
-    ddev . rm -rf test/*
+    ddev . rm -rf test
+    ddev . rm -rf .idea
+    ddev . rm -rf .git
 }
 
 
@@ -66,14 +68,28 @@ if [ "$1" == "run" ]; then
 
           echo "${YELLOW}[!] Mutagen sync appears to already be running${END}"
 
-          # Retrieve backup files
-          rsync -azP --del --exclude '.ddev/*' .ddev/project-stopped/ ./ --quiet
-          echo "${GREEN}[√] Backup files has been retrieved${END}"
-          initial_sync
+          echo "${YELLOW}Waiting for initial re-sync...${END}"
+
+          if [ "$(ls -A .)" ]; then
+               # Backup files before they getting deleted from the web-container
+               rsync -azP -aR --exclude '.ddev*' . .ddev/project-stopped --delete --quiet
+               echo "${GREEN}[√] Files has been backup${END}"
+          else
+              # Retrieve backup files
+              rsync -azP --del --exclude '.ddev/*' .ddev/project-stopped/ ./ --quiet
+              echo "${GREEN}[√] Backup files has been retrieved${END}"
+          fi
+
+          # initial_sync
+          sleep 1
 
           clear_test_files
           echo "${YELLOW}[!] Cleared test-files${END}"
 
+          mutagen sync terminate "$SANITIZED_SITE_NAME"
+          rm -rf "${DDEV_APPROOT}/.ddev/.mutagen-sync-name"
+          mutagen_create_docker_sync
+          initial_sync
           exit 0
       fi
 
