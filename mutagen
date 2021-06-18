@@ -72,8 +72,9 @@ function rsync_project() {
 
 if [ "$1" == "start" ]; then
 
-
       if mutagen sync list "$SANITIZED_SITE_NAME" 2>/dev/null; then
+          # Retrieve files front project-stopped
+          rsync -azP --del --exclude '.ddev/*' .ddev/project-stopped/ ./ --quiet
           mutagen_sync_create
       fi
 
