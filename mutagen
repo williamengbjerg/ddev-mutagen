@@ -88,6 +88,9 @@ if [ "$1" == "start" ]; then
       fi
 
       if ! mutagen sync list "$SANITIZED_SITE_NAME" 2>/dev/null; then
+          # Make backup before running files
+          rsync -azP -aR --exclude '.ddev*' . .ddev/project-stopped --delete --quiet
+
           ddev exec --dir /var/www rm -f phpstatus.php
           mutagen_sync_create
           initial_sync
