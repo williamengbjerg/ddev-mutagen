@@ -63,15 +63,16 @@ if [ "$1" == "run" ]; then
 
       # Don't recreate mutagen sync if it already exists.
       if [[ -f "${DDEV_APPROOT}/.ddev/.mutagen-sync-name" && -d ".ddev/project-stopped" && -n "$(ls -A .ddev/project-stopped/)" ]]; then
+
           echo "${YELLOW}[!] Mutagen sync appears to already be running${END}"
-          clear_test_files
-          sleep 3
 
           # Retrieve backup files
           rsync -azP --del --exclude '.ddev/*' .ddev/project-stopped/ ./ --quiet
           echo "${GREEN}[√] Backup files has been retrieved${END}"
-
           initial_sync
+
+          clear_test_files
+          echo "${YELLOW}[!] Cleared test-files${END}"
 
           exit 0
       fi
@@ -98,12 +99,9 @@ if [ "$1" == "backup" ]; then
 
       # Remove unused files
       if [[ -f "${DDEV_APPROOT}index.html" && -d "${DDEV_APPROOT}/test" ]]; then
-        clear_test_files
-        # exit 0
+          clear_test_files
+          exit 0
       fi
-
-      # rsync -azP --del --exclude '.ddev/*' .ddev/project-stopped/ ./ --quiet
-      # echo "${GREEN}[√] Backup files has been retrieved${END}"
 
     fi
 
