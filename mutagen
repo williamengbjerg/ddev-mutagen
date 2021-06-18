@@ -35,6 +35,11 @@ function initial_sync() {
             echo "${RED}Mutagen sync has errored -- check 'mutagen sync list $SANITIZED_SITE_NAME' for the problem${END}"
             break
         fi
+        if mutagen sync list "$SANITIZED_SITE_NAME" | grep "Last error: beta polling error:"; then
+            mutagen sync terminate "$SANITIZED_SITE_NAME"
+            mutagen_sync_create
+            break
+        fi
         if mutagen sync list "$SANITIZED_SITE_NAME" | grep "Status: Watching for changes"; then
             echo "${GREEN}Initial mutagen sync has completed!${END}"
             break
@@ -58,13 +63,8 @@ function rsync_project() {
 
     # Move folders/files if folder has backup files
     if [[ -d ".ddev/project-stopped" && -n "$(ls -A .ddev/project-stopped/)" ]]; then
-        mutagen_daemon_start
-        # Clear out the test files that are bundled with the web container.
-        ddev . --dir /var/www/html rm -rf index.html
-        ddev . --dir /var/www/html rm -rf test/
         mutagen_sync_create
-    else
-      echo "${RED}[!] No files from backup folder${END}"
+        initial_sync
     fi
 
 }
@@ -72,29 +72,29 @@ function rsync_project() {
 
 if [ "$1" == "start" ]; then
 
+      mutagen_daemon_start
+
+      # Clear out the test files that are bundled with the web container.
+      ddev . --dir /var/www/html rm -rf index.html
+      ddev . --dir /var/www/html rm -rf test/
+
       # Resume
       if [[ -f "${DDEV_APPROOT}/.ddev/.mutagen-sync-name-stopped" && -f "${DDEV_APPROOT}/.ddev/.mutagen-sync-name" ]]; then
 
           #mutagen sync reset "$SANITIZED_SITE_NAME"
           rsync_project
           rm "${DDEV_APPROOT}"/.ddev/.mutagen-sync-name-stopped
-          exit
       fi
-
-      mutagen_daemon_start
 
       if [ ! -f "${DDEV_APPROOT}/.ddev/.mutagen-sync-name" ]; then
           mutagen_create_sync_filename
       fi
 
       if ! mutagen sync list "$SANITIZED_SITE_NAME" 2>/dev/null; then
-          # Make backup before running files
-          rsync -azP -aR --exclude '.ddev*' . .ddev/project-stopped --delete --quiet
-
-          ddev exec --dir /var/www rm -f phpstatus.php
           mutagen_sync_create
-          initial_sync
       fi
+
+      initial_sync
 
 fi
 
