@@ -52,7 +52,7 @@ function mutagen_create_filename() {
     echo "$SANITIZED_SITE_NAME" > ${DDEV_APPROOT}/.ddev/.mutagen-sync-name
 }
 
-clear_test_files() {
+function clear_test_files() {
     # Clear out the test files that are bundled with the web container.
     ddev . rm -rf index.html
     ddev . rm -rf test
@@ -60,6 +60,17 @@ clear_test_files() {
     ddev . rm -rf .git
 }
 
+function backup_files() {
+    # Backup files before they getting deleted from the web-container
+    rsync -azP -aR --exclude '.ddev*' . .ddev/project-stopped --delete --quiet
+    echo "${GREEN}[√] Host-files has been backup${END}"
+}
+
+function retrieve_backup_files() {
+  # Retrieve backup files
+  rsync -azP --del --exclude '.ddev/*' .ddev/project-stopped/ ./ --quiet
+  echo "${GREEN}[√] Backup files has been retrieved${END}"
+}
 
 if [ "$1" == "run" ]; then
 
@@ -67,17 +78,12 @@ if [ "$1" == "run" ]; then
       if [[ -f "${DDEV_APPROOT}/.ddev/.mutagen-sync-name" && -d ".ddev/project-stopped" && -n "$(ls -A .ddev/project-stopped/)" ]]; then
 
           echo "${YELLOW}[!] Mutagen sync appears to already be running${END}"
-
           echo "${YELLOW}Waiting for initial re-sync...${END}"
 
           if [ "$(ls -A .)" ]; then
-               # Backup files before they getting deleted from the web-container
-               rsync -azP -aR --exclude '.ddev*' . .ddev/project-stopped --delete --quiet
-               echo "${GREEN}[√] Files has been backup${END}"
+               backup_files
           else
-              # Retrieve backup files
-              rsync -azP --del --exclude '.ddev/*' .ddev/project-stopped/ ./ --quiet
-              echo "${GREEN}[√] Backup files has been retrieved${END}"
+              retrieve_backup_files
           fi
 
           # initial_sync
@@ -90,7 +96,7 @@ if [ "$1" == "run" ]; then
           rm -rf "${DDEV_APPROOT}/.ddev/.mutagen-sync-name"
           mutagen_create_docker_sync
           initial_sync
-          exit 0
+          exit
       fi
 
       clear_test_files
@@ -113,20 +119,17 @@ if [ "$1" == "backup" ]; then
     # Copy files if backup folder is not empty
     if [[ -d ".ddev/project-stopped" && -n "$(ls -A .ddev/project-stopped/)" ]]; then
 
-      # Remove unused files
-      if [[ -f "${DDEV_APPROOT}index.html" && -d "${DDEV_APPROOT}/test" ]]; then
-          clear_test_files
-          exit 0
-      fi
+        # Remove unused files
+        if [[ -f "${DDEV_APPROOT}index.html" && -d "${DDEV_APPROOT}/test" ]]; then
+            clear_test_files
+            exit 0
+        fi
 
     fi
 
-    # Backup host files into .ddev "project-stopped"
-    rsync -azP -aR --exclude '.ddev*' . .ddev/project-stopped --delete --quiet
-    echo "${GREEN}[√] Host-files has been backup ${END}"
+    backup_files
 
 fi
-
 
 if [ "$1" == "stop" ]; then
 
