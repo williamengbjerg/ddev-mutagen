@@ -54,10 +54,7 @@ function mutagen_create_filename() {
 
 function clear_test_files() {
     # Clear out the test files that are bundled with the web container.
-    ddev . rm -rf index.html
-    ddev . rm -rf test
-    ddev . rm -rf .idea
-    ddev . rm -rf .git
+    find . -maxdepth 1 ! -name ".ddev" ! -name . -exec rm -r {} \;
 }
 
 function backup_files() {
