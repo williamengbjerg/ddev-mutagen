@@ -55,6 +55,8 @@ function mutagen_create_filename() {
 function clear_test_files() {
     # Clear out the test files that are bundled with the web container.
     find . -maxdepth 1 ! -name ".ddev" ! -name . -exec rm -r {} \;
+    ddev . rm -rf test
+    ddev . rm -rf index.html
 }
 
 function backup_files() {
@@ -86,8 +88,8 @@ if [ "$1" == "run" ]; then
           # initial_sync
           sleep 1
 
-          clear_test_files
-          echo "${YELLOW}[!] Cleared test-files${END}"
+          # clear_test_files
+          # echo "${YELLOW}[!] Cleared test-files${END}"
 
           mutagen sync terminate "$SANITIZED_SITE_NAME"
           rm -rf "${DDEV_APPROOT}/.ddev/.mutagen-sync-name"
@@ -96,8 +98,8 @@ if [ "$1" == "run" ]; then
           exit
       fi
 
-      clear_test_files
       backup_files
+      # clear_test_files
 
       echo "${YELLOW}Starting $SANITIZED_SITE_NAME${END}"
       mutagen_create_filename
