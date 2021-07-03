@@ -117,15 +117,15 @@ if [ "$1" == "backup" ]; then
 
     # Retrieve backup files and copy to host root
     # Copy files if backup folder is not empty
-    if [[ -d ".ddev/project-stopped" && -n "$(ls -A .ddev/project-stopped/)" ]]; then
+    # if [[ -d ".ddev/project-stopped" && -n "$(ls -A .ddev/project-stopped/)" ]]; then
 
         # Remove unused files
-        if [[ -f "${DDEV_APPROOT}index.html" && -d "${DDEV_APPROOT}/test" ]]; then
-            clear_test_files
-            exit 0
-        fi
+        # if [[ -f "${DDEV_APPROOT}index.html" && -d "${DDEV_APPROOT}/test" ]]; then
+            # clear_test_files
+            # exit 0
+        # fi
 
-    fi
+    # fi
 
     backup_files
 
