@@ -22,7 +22,7 @@ require_program "mutagen"
 SANITIZED_SITE_NAME=${DDEV_SITENAME//[^a-zA-Z0-9]/}
 
 function mutagen_create_docker_sync() {
-  mutagen sync create . docker://ddev-${DDEV_SITENAME}-web/var/www/html --ignore-vcs --ignore=.ddev/project-stopped,.idea --sync-mode=two-way-resolved --symlink-mode=posix-raw --name="$SANITIZED_SITE_NAME"
+  mutagen sync create . docker://ddev-${DDEV_SITENAME}-web/var/www/html --ignore-vcs --ignore=.ddev/project-stopped --sync-mode=two-way-resolved --symlink-mode=posix-raw --name="$SANITIZED_SITE_NAME"
 }
 
 # Wait for the initial sync process to complete, watch for errors and return when ready.
