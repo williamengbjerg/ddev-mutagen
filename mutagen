@@ -22,7 +22,7 @@ require_program "mutagen"
 SANITIZED_SITE_NAME=${DDEV_SITENAME//[^a-zA-Z0-9]/}
 
 function mutagen_create_docker_sync() {
-  mutagen sync create . docker://ddev-${DDEV_SITENAME}-web/var/www/html --ignore-vcs --ignore=.ddev/project-stopped --sync-mode=two-way-resolved --symlink-mode=posix-raw --name="$SANITIZED_SITE_NAME"
+  mutagen sync create ${DDEV_APPROOT} docker://ddev-${DDEV_SITENAME}-web/var/www/html --ignore-vcs --ignore=.ddev/project-stopped --sync-mode=two-way-resolved --symlink-mode=posix-raw --name="$SANITIZED_SITE_NAME"
 }
 
 # Wait for the initial sync process to complete, watch for errors and return when ready.
@@ -39,12 +39,6 @@ function initial_sync() {
             break
         fi
     done
-}
-
-# Make sure the mutagen daemon is running.
-function mutagen_daemon_start() {
-    mutagen daemon start 2>/dev/null
-    echo "${GREEN}Mutagen daemon started...${END}"
 }
 
 # Create the sync process from the ddev project name.
@@ -85,9 +79,6 @@ if [ "$1" == "run" ]; then
               retrieve_backup_files
           fi
 
-          # initial_sync
-          sleep 1
-
           # clear_test_files
           # echo "${YELLOW}[!] Cleared test-files${END}"
 
@@ -103,7 +94,6 @@ if [ "$1" == "run" ]; then
 
       echo "${YELLOW}Starting $SANITIZED_SITE_NAME${END}"
       mutagen_create_filename
-      mutagen_daemon_start
 
       if ! mutagen sync list "$SANITIZED_SITE_NAME" 2>/dev/null; then
         mutagen_create_docker_sync
@@ -115,30 +105,15 @@ fi
 
 if [ "$1" == "backup" ]; then
 
-    # Retrieve backup files and copy to host root
-    # Copy files if backup folder is not empty
-    # if [[ -d ".ddev/project-stopped" && -n "$(ls -A .ddev/project-stopped/)" ]]; then
-
-        # Remove unused files
-        # if [[ -f "${DDEV_APPROOT}index.html" && -d "${DDEV_APPROOT}/test" ]]; then
-            # clear_test_files
-            # exit 0
-        # fi
-
-    # fi
-
     backup_files
 
 fi
 
-if [ "$1" == "stop" ]; then
-
-    # Copy and move sync name. Used for validation to resume project
-    # cp "${DDEV_APPROOT}/.ddev/.mutagen-sync-name" "${DDEV_APPROOT}/.ddev/.mutagen-sync-name-stopped"
+if [ "$1" == "stop" -o "$1" == "pause" ]; then
 
     echo "${YELLOW}Ending mutagen sync process: $SANITIZED_SITE_NAME ${END}"
     rm -rf "${DDEV_APPROOT}/.ddev/.mutagen-sync-name"
+    mutagen sync flush "$SANITIZED_SITE_NAME"
     mutagen sync terminate "$SANITIZED_SITE_NAME"
-    mutagen daemon stop
 
 fi
